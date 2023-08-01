@@ -59,16 +59,24 @@ class Inertia
     public static function getSharedProps()
     {
         $shared = [
-            'errors' => session()->get('errors'),
-            'flash' => session()->get('flash'),
+            'session' => null,
+            'errors' => null,
+            'flash' => null,
             'auth' => [
                 'user' => null,
+                'errors' => null,
             ],
         ];
 
-        if (app()->config('db.instance')) {
+        if (app()->config('session.instance')) {
+            $shared['session'] = session()->get();
+            $shared['flash'] = flash()->display();
+        }
+
+        if (app()->config('auth.instance')) {
             $shared['auth'] = [
                 'user' => auth()->user(),
+                'errors' => auth()->errors(),
             ];
         }
 
