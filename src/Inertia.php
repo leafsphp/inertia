@@ -69,7 +69,7 @@ class Inertia
         ];
 
         if (app()->config('session.instance')) {
-            $shared['session'] = session()->get();
+            $shared['session'] = session()->body();
             $shared['flash'] = flash()->display();
         }
 
