@@ -73,7 +73,7 @@ class Inertia
             $shared['flash'] = flash()->display();
         }
 
-        if (app()->config('auth.instance')) {
+        if (app()->config('db.instance')) {
             $shared['auth'] = [
                 'user' => auth()->user(),
                 'errors' => auth()->errors(),
