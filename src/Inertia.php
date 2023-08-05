@@ -14,10 +14,12 @@ class Inertia
     /**
      * Root view
      */
-    protected static $rootView = "_inertia";
+    protected static $rootView = '_inertia';
 
     /**
      * Render InertiaJS view
+     * @param string $component The component to render.
+     * @param array $props The props to pass to the component.
      */
     public static function render(string $component, array $props = [])
     {
