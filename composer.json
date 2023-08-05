@@ -30,7 +30,7 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "illuminate/support": "^10.16",
+        "illuminate/support": "*",
         "leafs/http": "*"
     },
     "require-dev": {
