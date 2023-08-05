@@ -44,7 +44,13 @@ class Inertia
             return response()->withHeader(['X-Inertia' => 'true'])->json($page, 200);
         }
 
-        render(static::$rootView, compact("page"));
+        if (function_exists('render')) {
+            return render(static::$rootView, compact('page'));
+        }
+
+        $engine = new \Leaf\BareUI;
+        $engine->config('path', app()->config('views.path') ?? getcwd());
+        $engine->render(static::$rootView, compact('page'));
     }
 
     /**
@@ -91,7 +97,7 @@ class Inertia
     public static function getVersion()
     {
         return md5_file(
-            app()->config('inertia.version') ?? app()->config('views.path') . "/_inertia.view.php"
+            app()->config('inertia.version') ?? ((app()->config('views.path') ?? getcwd()) . '/_inertia.view.php')
         );
     }
 
