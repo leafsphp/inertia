@@ -48,9 +48,18 @@ class Inertia
             return render(static::$rootView, compact('page'));
         }
 
+        if (class_exists('Leaf\Blade')) {
+            $blade = new \Leaf\Blade;
+            $blade->configure(
+                app()->config('views.path') ?? getcwd(),
+                app()->config('views.cache') ?? getcwd()
+            );
+            return $blade->render(static::$rootView, compact('page'));
+        }
+
         $engine = new \Leaf\BareUI;
         $engine->config('path', app()->config('views.path') ?? getcwd());
-        $engine->render(static::$rootView, compact('page'));
+        return $engine->render(static::$rootView, compact('page'));
     }
 
     /**
