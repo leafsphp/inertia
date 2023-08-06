@@ -105,9 +105,34 @@ class Inertia
      */
     public static function getVersion()
     {
+        $isBladeProject = static::isBladeProject();
+        $ext = $isBladeProject ? 'blade' : 'view';
+
         return md5_file(
-            app()->config('inertia.version') ?? ((app()->config('views.path') ?? getcwd()) . '/_inertia.view.php')
+            app()->config('inertia.version') ?? ((app()->config('views.path') ?? getcwd()) . "/_inertia.$ext.php")
         );
+    }
+
+    public static function isBladeProject()
+    {
+        $directory = getcwd();
+        $isBladeProject = false;
+
+        if (file_exists("$directory/config/view.php")) {
+            $viewConfig = require "$directory/config/view.php";
+            $isBladeProject = strpos(strtolower($viewConfig['viewEngine'] ?? $viewConfig['view_engine'] ?? ''), 'blade') !== false;
+        } else if (file_exists("$directory/composer.lock")) {
+            $composerLock = json_decode(file_get_contents("$directory/composer.lock"), true);
+            $packages = $composerLock['packages'] ?? [];
+            foreach ($packages as $package) {
+                if ($package['name'] === 'leafs/blade') {
+                    $isBladeProject = true;
+                    break;
+                }
+            }
+        }
+
+        return $isBladeProject;
     }
 
     /**
