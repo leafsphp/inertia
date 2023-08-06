@@ -54,12 +54,12 @@ class Inertia
                 app()->config('views.path') ?? getcwd(),
                 app()->config('views.cache') ?? getcwd()
             );
-            return $blade->render(static::$rootView, compact('page'));
+            return response()->markup($blade->render(static::$rootView, compact('page')));
         }
 
         $engine = new \Leaf\BareUI;
         $engine->config('path', app()->config('views.path') ?? getcwd());
-        return $engine->render(static::$rootView, compact('page'));
+        return response()->markup($engine->render(static::$rootView, compact('page')));
     }
 
     /**
