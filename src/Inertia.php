@@ -3,6 +3,7 @@
 namespace Leaf;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 
 /**
  * Inertia Adapter for Leaf
@@ -34,7 +35,10 @@ class Inertia
         $page = [
             'component' => $component,
             'props' => $props,
-            'url' => app()->getRoute()['path'] ?? $_SERVER['REQUEST_URI'] ?? '/',
+            'url' => Str::start(Str::after(
+                request()->getUrl() . request()->getPath() . (request()->getQueryString() ? '?' . request()->getQueryString() : ''),
+                request()->getScheme() . '://' . request()->getHostWithPort()
+            ), '/'),
             'version' => static::getVersion(),
         ];
 
