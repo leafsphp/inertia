@@ -92,7 +92,7 @@ class Inertia
             $shared['flash'] = flash()->display();
         }
 
-        if (function_exists('db')) {
+        if (function_exists('auth')) {
             $shared['auth'] = [
                 'id' => auth()->id(),
                 'user' => auth()->user()->get(),
