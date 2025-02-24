@@ -85,14 +85,14 @@ class Inertia
             ],
         ];
 
-        if (app()->config('session.instance')) {
+        if (app()->config('session')) {
             $shared['session'] = session()->body();
             $shared['flash'] = flash()->display();
         }
 
-        if (app()->config('db.instance')) {
+        if (app()->config('db')) {
             $shared['auth'] = [
-                'user' => auth()->user(),
+                'user' => auth()->user()->get(),
                 'errors' => auth()->errors(),
             ];
         }
