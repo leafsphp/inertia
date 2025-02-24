@@ -99,7 +99,7 @@ class Inertia
         if (function_exists('auth')) {
             $shared['auth'] = [
                 'id' => auth()->id(),
-                'user' => auth()->user()->get(),
+                'user' => auth()->user() ? auth()->user()->get() : null,
                 'errors' => auth()->errors(),
             ];
         }
