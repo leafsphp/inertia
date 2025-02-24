@@ -79,22 +79,29 @@ class Inertia
             'session' => null,
             'errors' => null,
             'flash' => null,
+            '_token' => null,
             'auth' => [
+                'id' => null,
                 'user' => null,
                 'errors' => null,
             ],
         ];
 
-        if (app()->config('session')) {
+        if (function_exists('session')) {
             $shared['session'] = session()->body();
             $shared['flash'] = flash()->display();
         }
 
-        if (app()->config('db')) {
+        if (function_exists('db')) {
             $shared['auth'] = [
+                'id' => auth()->id(),
                 'user' => auth()->user()->get(),
                 'errors' => auth()->errors(),
             ];
+        }
+
+        if (class_exists('\Leaf\Anchor\CSRF')) {
+            $shared['_token'] = csrf()->token();
         }
 
         return $shared;
