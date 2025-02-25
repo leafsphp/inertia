@@ -19,6 +19,7 @@ class Inertia
 
     /**
      * Render InertiaJS view
+     * 
      * @param string $component The component to render.
      * @param array $props The props to pass to the component.
      */
@@ -34,7 +35,7 @@ class Inertia
 
         $page = [
             'component' => $component,
-            'props' => $props,
+            'props' => array_merge($props, self::getSharedProps()),
             'url' => Str::start(Str::after(
                 request()->getUrl() . request()->getPath() . (request()->getQueryString() ? '?' . request()->getQueryString() : ''),
                 request()->getScheme() . '://' . request()->getHostWithPort()
@@ -42,7 +43,7 @@ class Inertia
             'version' => static::getVersion(),
         ];
 
-        $page = array_merge($page, self::getSharedProps());
+        $page = array_merge($page, self::getSharedPageInfo());
 
         if (request()->headers('X-Inertia')) {
             return response()->withHeader(['X-Inertia' => 'true'])->json($page, 200);
@@ -63,6 +64,7 @@ class Inertia
 
         $engine = new \Leaf\BareUI;
         $engine->config('path', app()->config('views.path') ?? getcwd());
+
         return response()->markup($engine->render(static::$rootView, compact('page')));
     }
 
@@ -81,7 +83,6 @@ class Inertia
     {
         $shared = [
             'session' => null,
-            'errors' => null,
             'flash' => null,
             '_token' => null,
             'auth' => [
@@ -112,6 +113,18 @@ class Inertia
     }
 
     /**
+     * Get shared page info
+     */
+    public static function getSharedPageInfo()
+    {
+        $shared = [
+            'env' => app()->env(),
+        ];
+
+        return $shared;
+    }
+
+    /**
      * Get version
      */
     public static function getVersion()
@@ -135,6 +148,7 @@ class Inertia
         } else if (file_exists("$directory/composer.lock")) {
             $composerLock = json_decode(file_get_contents("$directory/composer.lock"), true);
             $packages = $composerLock['packages'] ?? [];
+
             foreach ($packages as $package) {
                 if ($package['name'] === 'leafs/blade') {
                     $isBladeProject = true;
@@ -148,6 +162,7 @@ class Inertia
 
     /**
      * Resolve all necessary class instances in the given props.
+     * 
      * @param array $props The props to resolve.
      * @param bool $unpackDotProps Whether to unpack dot props.
      */
