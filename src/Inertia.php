@@ -38,7 +38,7 @@ class Inertia
             'props' => array_merge($props, self::getSharedProps()),
             'url' => Str::start(Str::after(
                 request()->getUrl() . request()->getPath() . (request()->getQueryString() ? '?' . request()->getQueryString() : ''),
-                request()->getScheme() . '://' . request()->getHostWithPort()
+                request()->getUrl()
             ), '/'),
             'version' => static::getVersion(),
         ];
