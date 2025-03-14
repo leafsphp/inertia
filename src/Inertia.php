@@ -85,6 +85,7 @@ class Inertia
             'session' => null,
             'flash' => null,
             '_token' => null,
+            'request' => request()->body(),
             'auth' => [
                 'id' => null,
                 'user' => null,
@@ -118,7 +119,8 @@ class Inertia
     public static function getSharedPageInfo()
     {
         $shared = [
-            'env' => app()->env(),
+            'appName' => _env('APP_NAME', 'Leaf App'),
+            'appUrl' => _env('APP_URL', request()->getUrl()),
         ];
 
         return $shared;
