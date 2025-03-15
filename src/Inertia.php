@@ -91,6 +91,8 @@ class Inertia
                 'user' => null,
                 'errors' => null,
             ],
+            'user' => null,
+            'billing' => null,
         ];
 
         if (function_exists('session')) {
@@ -98,16 +100,36 @@ class Inertia
             $shared['flash'] = flash()->display();
         }
 
+        $user = null;
+
         if (function_exists('auth')) {
+            $user = auth()->user() ? auth()->user()->get() : null;
+
             $shared['auth'] = [
                 'id' => auth()->id(),
-                'user' => auth()->user() ? auth()->user()->get() : null,
+                'user' => $user,
+                'permissions' => $user ? $user->permissions() : null,
+                'roles' => $user ? $user->roles() : null,
                 'errors' => auth()->errors(),
             ];
+
+            $shared['user'] = $user;
         }
 
         if (class_exists('\Leaf\Anchor\CSRF')) {
             $shared['_token'] = csrf()->token();
+        }
+
+        if (function_exists('billing')) {
+            $shared['billing'] = [
+                'plans' => billing()->plans(),
+                'hasSubscription' => billing()->hasSubscription(),
+                'subscription' => billing()->subscription(),
+                'isOnTrial' => billing()->isOnTrial(),
+                'subscriptionNextBillingDate' => billing()->subscriptionNextBillingDate(),
+                'subscriptionEndDate' => billing()->subscriptionEndDate(),
+                'subscriptionPeriod' => billing()->subscriptionPeriod(),
+            ];
         }
 
         return $shared;
