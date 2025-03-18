@@ -108,8 +108,8 @@ class Inertia
             $shared['auth'] = [
                 'id' => auth()->id(),
                 'user' => $user,
-                'permissions' => $user ? $user->permissions() : null,
-                'roles' => $user ? $user->roles() : null,
+                'permissions' => $user ? auth()->user()->permissions() : null,
+                'roles' => $user ? auth()->user()->roles() : null,
                 'errors' => auth()->errors(),
             ];
 
