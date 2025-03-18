@@ -96,7 +96,13 @@ class Inertia
         ];
 
         if (function_exists('session')) {
-            $shared['session'] = session()->body();
+            $sessionData = session()->body();
+
+            unset($sessionData['leaf']['flash']);
+            unset($sessionData['leaf']['hidden']);
+            unset($sessionData['leaf']['encrypted']);
+
+            $shared['session'] = $sessionData;
             $shared['flash'] = flash()->display();
         }
 
