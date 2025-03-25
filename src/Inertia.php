@@ -85,7 +85,7 @@ class Inertia
             'session' => null,
             'flash' => null,
             '_token' => null,
-            'request' => request()->body(),
+            'request' => request()->urlData(),
             'auth' => [
                 'id' => null,
                 'user' => null,
@@ -121,17 +121,17 @@ class Inertia
 
             $shared['user'] = $user;
 
-            if (function_exists('billing')) {
-                $shared['user'] = (array_merge($user ?? [], [
-                    'plans' => billing()->plans(),
-                    'hasSubscription' => billing()->hasSubscription(),
-                    'subscription' => billing()->subscription(),
-                    'isOnTrial' => billing()->isOnTrial(),
-                    'subscriptionNextBillingDate' => billing()->subscriptionNextBillingDate(),
-                    'subscriptionEndDate' => billing()->subscriptionEndDate(),
-                    'subscriptionPeriod' => billing()->subscriptionPeriod(),
-                ]));
-            }
+            // if (function_exists('billing')) {
+            //     $shared['user'] = (array_merge($user ?? [], [
+            //         'plans' => billing()->plans(),
+            //         'hasSubscription' => billing()->hasSubscription(),
+            //         'subscription' => billing()->subscription(),
+            //         'isOnTrial' => billing()->isOnTrial(),
+            //         'subscriptionNextBillingDate' => billing()->subscriptionNextBillingDate(),
+            //         'subscriptionEndDate' => billing()->subscriptionEndDate(),
+            //         'subscriptionPeriod' => billing()->subscriptionPeriod(),
+            //     ]));
+            // }
         }
 
         if (class_exists('\Leaf\Anchor\CSRF')) {
