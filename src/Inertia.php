@@ -121,17 +121,20 @@ class Inertia
 
             $shared['user'] = $user;
 
-            // if (function_exists('billing')) {
-            //     $shared['user'] = (array_merge($user ?? [], [
-            //         'plans' => billing()->plans(),
-            //         'hasSubscription' => billing()->hasSubscription(),
-            //         'subscription' => billing()->subscription(),
-            //         'isOnTrial' => billing()->isOnTrial(),
-            //         'subscriptionNextBillingDate' => billing()->subscriptionNextBillingDate(),
-            //         'subscriptionEndDate' => billing()->subscriptionEndDate(),
-            //         'subscriptionPeriod' => billing()->subscriptionPeriod(),
-            //     ]));
-            // }
+            if (function_exists('billing')) {
+                $shared['billing'] = [
+                    'tiers' => billing()->tiers(),
+                    'periods' => billing()->periods(),
+                ];
+
+                $subscription = auth()->user()->subscription();
+
+                $shared['user'] = $shared['auth']['user'] = array_merge($shared['user'], [
+                    'hasSubscription' => !!$subscription,
+                    'subscription' => $subscription,
+                    'isOnTrial' => ($subscription['status'] ?? false) === \Leaf\Billing\Subscription::STATUS_TRIAL,
+                ]);
+            }
         }
 
         if (class_exists('\Leaf\Anchor\CSRF')) {
