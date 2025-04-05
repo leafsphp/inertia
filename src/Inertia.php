@@ -127,9 +127,9 @@ class Inertia
                     'periods' => billing()->periods(),
                 ];
 
-                $subscription = auth()->user()->subscription();
+                $subscription = $user ? auth()->user()->subscription() : [];
 
-                $shared['user'] = $shared['auth']['user'] = array_merge($shared['user'], [
+                $shared['user'] = $shared['auth']['user'] = array_merge($shared['user'] ?? [], [
                     'hasSubscription' => !!$subscription,
                     'subscription' => $subscription,
                     'isOnTrial' => ($subscription['status'] ?? false) === \Leaf\Billing\Subscription::STATUS_TRIAL,
@@ -140,7 +140,6 @@ class Inertia
         if (class_exists('\Leaf\Anchor\CSRF')) {
             $shared['_token'] = csrf()->token();
         }
-
 
         return $shared;
     }
