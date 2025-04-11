@@ -129,11 +129,13 @@ class Inertia
 
                 $subscription = $user ? auth()->user()->subscription() : [];
 
-                $shared['user'] = $shared['auth']['user'] = array_merge($shared['user'] ?? [], [
-                    'hasSubscription' => !!$subscription,
-                    'subscription' => $subscription,
-                    'isOnTrial' => ($subscription['status'] ?? false) === \Leaf\Billing\Subscription::STATUS_TRIAL,
-                ]);
+                if ($user) {
+                    $shared['user'] = $shared['auth']['user'] = array_merge($shared['user'] ?? [], [
+                        'hasSubscription' => !!$subscription,
+                        'subscription' => $subscription,
+                        'isOnTrial' => ($subscription['status'] ?? false) === \Leaf\Billing\Subscription::STATUS_TRIAL,
+                    ]);
+                }
             }
         }
 
