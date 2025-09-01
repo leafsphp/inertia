@@ -17,6 +17,8 @@ class Inertia
      */
     protected static $rootView = '_inertia';
 
+    protected static $sharedProps = [];
+
     /**
      * Render InertiaJS view
      * 
@@ -69,6 +71,20 @@ class Inertia
     }
 
     /**
+     * Add shared props
+     */
+    public static function share($key, $value = null)
+    {
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
+                static::$sharedProps[$k] = $v;
+            }
+        } else {
+            static::$sharedProps[$key] = $value;
+        }
+    }
+
+    /**
      * Set root view
      */
     public static function setRootView(string $rootView)
@@ -81,7 +97,13 @@ class Inertia
      */
     public static function getSharedProps()
     {
-        $shared = [
+        $userShared = [];
+
+        foreach (static::$sharedProps as $key => $value) {
+            $userShared[$key] = is_callable($value) ? $value() : $value;
+        }
+
+        $shared = array_merge([
             'session' => null,
             'flash' => null,
             '_token' => null,
@@ -93,7 +115,7 @@ class Inertia
             ],
             'user' => null,
             'billing' => null,
-        ];
+        ], $userShared);
 
         if (function_exists('session')) {
             $sessionData = session()->body();
