@@ -19,6 +19,8 @@ class Inertia
 
     protected static $sharedProps = [];
 
+    protected static $omittedProps = [];
+
     /**
      * Render InertiaJS view
      * 
@@ -117,7 +119,11 @@ class Inertia
             'billing' => null,
         ], $userShared);
 
-        if (function_exists('session')) {
+        $omitSession = in_array('auth', static::$omittedProps);
+        $omitAuth = in_array('auth', static::$omittedProps);
+        $omitToken = in_array('_token', static::$omittedProps);
+
+        if (function_exists('session') && !$omitSession) {
             $sessionData = session()->body();
 
             unset($sessionData['leaf']['flash']);
@@ -130,7 +136,7 @@ class Inertia
 
         $user = null;
 
-        if (function_exists('auth')) {
+        if (function_exists('auth') && !$omitAuth) {
             $user = auth()->user() ? auth()->user()->get() : null;
 
             $shared['auth'] = [
@@ -161,9 +167,15 @@ class Inertia
             }
         }
 
-        if (class_exists('\Leaf\Anchor\CSRF')) {
+        if (class_exists('\Leaf\Anchor\CSRF') && !$omitToken) {
             $shared['_token'] = csrf()->token();
         }
+
+        array_map(function($prop) use ($shared) {
+            if(in_array($prop, $shared)) {
+                unset($shared[$prop]);
+            }
+        }, static::$omittedProps);
 
         return $shared;
     }
@@ -179,6 +191,13 @@ class Inertia
         ];
 
         return $shared;
+    }
+
+    /**
+     * Set omitted props
+     */
+    public static function setOmittedProps(array $omittedProps) {
+        static::$omittedProps = $omittedProps;
     }
 
     /**
