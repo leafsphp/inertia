@@ -45,4 +45,35 @@ app()->get('/', function() {
 });
 ```
 
-**Full docs on [the leaf docs](https://leafphp.dev/modules/views/inertia/).**
+## Advanced props
+
+The adapter mirrors the feature set of inertia-laravel v2:
+
+```php
+use Leaf\Inertia;
+
+Inertia::render('Dashboard', [
+    'user' => auth()->user(),
+
+    // skipped on first load, sent when requested in a partial reload
+    'stats' => Inertia::optional(fn () => Stats::heavy()),
+
+    // fetched automatically by the client after the page first renders
+    'feed' => Inertia::defer(fn () => Feed::load()),
+
+    // appended to the client's existing value (infinite scroll etc.)
+    'posts' => Inertia::merge(fn () => Post::paginate())->matchOn('id'),
+
+    // included in every response, even filtered partial reloads
+    'errors' => Inertia::always(fn () => flash()->display('errors') ?? []),
+]);
+
+Inertia::version(fn () => \Leaf\Vite::manifestHash()); // asset versioning (409 on mismatch)
+Inertia::encryptHistory();                             // encrypt browser history state
+Inertia::clearHistory();                               // clear it, e.g. on logout
+Inertia::location('https://example.com');              // redirect outside the SPA
+```
+
+Partial reloads support both `only` and `except`, and merge behaviour can be reset per prop from the client with `router.reload({ reset: ['posts'] })`.
+
+**Full docs on [the leaf docs](https://leafphp.dev/docs/frontend/inertia).**
