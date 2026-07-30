@@ -6,13 +6,18 @@ class BundleDetector
 {
     public function detect()
     {
-        return collect([
+        $candidates = array_filter([
             app()->config('inertia.ssrBundle'),
-            // base_path('bootstrap/ssr/ssr.mjs'),
-            // base_path('bootstrap/ssr/ssr.js'),
-            PublicPath('js/ssr.js'),
-        ])->filter()->first(function ($path) {
-            return file_exists($path);
-        });
+            function_exists('PublicPath') ? PublicPath('js/ssr.js') : null,
+            getcwd() . '/public/js/ssr.js',
+        ]);
+
+        foreach ($candidates as $path) {
+            if (file_exists($path)) {
+                return $path;
+            }
+        }
+
+        return null;
     }
 }
