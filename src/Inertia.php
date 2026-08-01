@@ -152,6 +152,10 @@ class Inertia
      */
     public static function render(string $component, array $props = [])
     {
+        if (function_exists('crash')) {
+            crash()->leaveCrumb("inertia: $component", 'view', [], false);
+        }
+
         $version = static::getVersion();
 
         if (
