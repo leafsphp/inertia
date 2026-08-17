@@ -208,10 +208,16 @@ class Inertia
         }
 
         if (class_exists('Leaf\Blade')) {
+            $cachePath = app()->config('views.cache') ?? (getcwd() . '/storage/cache');
+
+            if (!is_dir($cachePath)) {
+                mkdir($cachePath, 0755, true);
+            }
+
             $blade = new \Leaf\Blade();
             $blade->configure(
                 app()->config('views.path') ?? getcwd(),
-                app()->config('views.cache') ?? getcwd()
+                $cachePath
             );
 
             return response()->markup($blade->render(static::$rootView, compact('page')));
