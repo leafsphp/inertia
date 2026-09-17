@@ -149,8 +149,11 @@ class Inertia
      *
      * @param string $component The component to render.
      * @param array $props The props to pass to the component.
+     * @param int $status The HTTP status of the response. Inertia clients
+     * treat any response carrying the X-Inertia header as a page visit, so
+     * a 404 page can carry a real 404 status: `Inertia::render('not-found', [], 404)`.
      */
-    public static function render(string $component, array $props = [])
+    public static function render(string $component, array $props = [], int $status = 200)
     {
         if (function_exists('crash')) {
             crash()->leaveCrumb("inertia: $component", 'view', [], false);
@@ -170,17 +173,13 @@ class Inertia
         }
 
         $props = array_merge(static::getSharedProps(), $props);
-
         $isPartial = request()->headers('X-Inertia-Partial-Component', false) === $component;
-
         $deferredProps = $isPartial ? [] : static::resolveDeferredProps($props);
-
         $props = $isPartial
             ? static::resolvePartialProps($props)
             : array_filter($props, fn ($prop) => !($prop instanceof IgnoreFirstLoad));
 
         $mergeMeta = static::resolveMergeProps($props);
-
         $props = static::resolvePropertyInstances($props);
 
         $page = array_merge(
@@ -200,7 +199,11 @@ class Inertia
         if (request()->headers('X-Inertia')) {
             return response()
                 ->withHeader(['X-Inertia' => 'true', 'Vary' => 'X-Inertia'])
-                ->json($page, 200);
+                ->json($page, $status);
+        }
+
+        if (function_exists('view')) {
+            return response()->markup(view(static::$rootView, compact('page')), $status);
         }
 
         if (function_exists('render')) {
@@ -220,13 +223,13 @@ class Inertia
                 $cachePath
             );
 
-            return response()->markup($blade->render(static::$rootView, compact('page')));
+            return response()->markup($blade->render(static::$rootView, compact('page')), $status);
         }
 
         $engine = new \Leaf\BareUI();
         $engine->config('path', app()->config('views.path') ?? getcwd());
 
-        return response()->markup($engine->render(static::$rootView, compact('page')));
+        return response()->markup($engine->render(static::$rootView, compact('page')), $status);
     }
 
     /**
@@ -371,6 +374,7 @@ class Inertia
         $shared = array_merge([
             'session' => null,
             'flash' => null,
+            'errors' => new AlwaysProp(fn () => static::validationErrors()),
             '_token' => null,
             'request' => request()->urlData(),
             'auth' => [
@@ -439,6 +443,40 @@ class Inertia
         }
 
         return $shared;
+    }
+
+    /**
+     * Validation errors for the page, read from the `errors` flash bag.
+     *
+     * Inertia clients (`useForm().errors`, `usePage().props.errors`) expect a
+     * top-level `errors` prop shaped `{field: "message"}`. A failed save
+     * flashes and redirects (`response()->withFlash('errors', request()->errors())->redirect('/form', 303)`)
+     * and the next page finds the messages here without the controller
+     * passing them by hand. Leaf's validator can hold several messages per
+     * field; the client wants one, so the first is kept. The bag is read
+     * once, so the errors clear on the following visit.
+     *
+     * @return object A JSON object: `{}` when there is nothing to show
+     */
+    public static function validationErrors(): object
+    {
+        if (!function_exists('flash') || in_array('session', static::$omittedProps)) {
+            return (object) [];
+        }
+
+        $errors = flash()->display('errors');
+
+        if (!is_array($errors)) {
+            return (object) [];
+        }
+
+        $normalized = [];
+
+        foreach ($errors as $field => $message) {
+            $normalized[$field] = is_array($message) ? (string) (reset($message) ?: '') : (string) $message;
+        }
+
+        return (object) $normalized;
     }
 
     /**

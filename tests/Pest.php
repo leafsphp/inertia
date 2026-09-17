@@ -32,13 +32,30 @@ if (!function_exists('_env')) {
     }
 }
 
-if (!function_exists('render')) {
-    // mvc-core's render() — Inertia uses it for full page loads when present
-    function render(string $view, array $data = [])
+if (!function_exists('view')) {
+    // mvc-core's view() — Inertia compiles the root shell through it on full
+    // page loads and hands the markup to response()->markup() with a status
+    function view(string $view, array $data = [])
     {
         $GLOBALS['__renderedView'] = ['view' => $view, 'data' => $data];
 
-        return $data;
+        return "<!-- $view -->";
+    }
+}
+
+if (!function_exists('flash')) {
+    // leafs/session's flash bag: display($key) reads a bag once and clears it
+    function flash()
+    {
+        return new class () {
+            public function display(string $key = 'message')
+            {
+                $value = $GLOBALS['__flash'][$key] ?? null;
+                unset($GLOBALS['__flash'][$key]);
+
+                return $value;
+            }
+        };
     }
 }
 
@@ -65,12 +82,12 @@ function setInertiaRequest(string $method = 'GET', string $uri = '/', array $hea
 }
 
 /** Render and return the decoded page object (X-Inertia JSON response) */
-function renderPage(string $component, array $props = [], array $headers = []): array
+function renderPage(string $component, array $props = [], array $headers = [], int $status = 200): array
 {
     setInertiaRequest('GET', $_SERVER['REQUEST_URI'] ?? '/', array_merge(['X-Inertia' => 'true'], $headers));
 
     ob_start();
-    \Leaf\Inertia::render($component, $props);
+    \Leaf\Inertia::render($component, $props, $status);
     $output = ob_get_clean();
 
     return json_decode($output, true) ?? [];
@@ -118,4 +135,5 @@ uses()->beforeEach(function () {
     setInertiaRequest();
     unset($GLOBALS['__renderedView']);
     $GLOBALS['__appConfig'] = [];
+    $GLOBALS['__flash'] = [];
 })->in(__DIR__);

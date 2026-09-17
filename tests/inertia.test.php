@@ -30,11 +30,100 @@ test('the url includes the query string', function () {
 test('non-inertia requests render the root view with the page object', function () {
     setInertiaRequest();
 
+    ob_start();
     Inertia::render('Home', ['a' => 1]);
+    $html = ob_get_clean();
 
     expect($GLOBALS['__renderedView']['view'])->toBe('_inertia');
     expect($GLOBALS['__renderedView']['data']['page']['component'])->toBe('Home');
     expect($GLOBALS['__renderedView']['data']['page']['props']['a'])->toBe(1);
+    expect($html)->toBe('<!-- _inertia -->');
+    expect(responseStatus())->toBe(200);
+});
+
+test('a page can carry its own http status on full loads and inertia visits', function () {
+    setInertiaRequest('GET', '/missing');
+
+    ob_start();
+    Inertia::render('not-found', [], 404);
+    ob_end_clean();
+
+    expect($GLOBALS['__renderedView']['data']['page']['component'])->toBe('not-found');
+    expect(responseStatus())->toBe(404);
+
+    $page = renderPage('not-found', [], [], 404);
+
+    expect($page['component'])->toBe('not-found');
+    expect(responseHeaders()['X-Inertia'] ?? null)->toBe('true');
+    expect(responseStatus())->toBe(404);
+});
+
+test('the inertia() helper forwards the status', function () {
+    setInertiaRequest('GET', '/missing', ['X-Inertia' => 'true']);
+
+    ob_start();
+    inertia('not-found', [], 404);
+    ob_end_clean();
+
+    expect(responseStatus())->toBe(404);
+});
+
+test('errors is an empty object until something is flashed', function () {
+    $page = renderPage('Form');
+
+    expect($page['props'])->toHaveKey('errors');
+    expect($page['props']['errors'])->toBe([]);
+
+    setInertiaRequest('GET', '/', ['X-Inertia' => 'true']);
+    ob_start();
+    Inertia::render('Form');
+    $raw = ob_get_clean();
+
+    expect($raw)->toContain('"errors":{}');
+});
+
+test('flashed validation errors become the errors prop and clear once read', function () {
+    $GLOBALS['__flash']['errors'] = [
+        'email' => 'email is invalid',
+        'password' => ['password is required', 'password must be at least 8 characters'],
+    ];
+
+    $page = renderPage('Form');
+
+    expect($page['props']['errors'])->toBe([
+        'email' => 'email is invalid',
+        'password' => 'password is required',
+    ]);
+
+    expect(renderPage('Form')['props']['errors'])->toBe([]);
+});
+
+test('errors survive partial reloads and page props still win', function () {
+    $GLOBALS['__flash']['errors'] = ['name' => 'name is required'];
+
+    $partial = renderPage('Form', ['a' => 1, 'b' => 2], [
+        'X-Inertia-Partial-Component' => 'Form',
+        'X-Inertia-Partial-Data' => 'a',
+    ]);
+
+    expect($partial['props'])->toHaveKeys(['a', 'errors']);
+    expect($partial['props']['errors'])->toBe(['name' => 'name is required']);
+
+    $page = renderPage('Form', ['errors' => ['custom' => 'mine']]);
+
+    expect($page['props']['errors'])->toBe(['custom' => 'mine']);
+});
+
+test('errors stay empty without the session and can be omitted like any shared prop', function () {
+    $GLOBALS['__flash']['errors'] = ['name' => 'name is required'];
+    Inertia::setOmittedProps(['session']);
+
+    expect(renderPage('Form')['props']['errors'])->toBe([]);
+    expect($GLOBALS['__flash']['errors'])->toBe(['name' => 'name is required']); // untouched: the bag is someone else's now
+
+    Inertia::setOmittedProps(['errors']);
+
+    expect(renderPage('Form')['props'])->not->toHaveKey('errors');
 });
 
 test('setRootView changes the root view', function () {
